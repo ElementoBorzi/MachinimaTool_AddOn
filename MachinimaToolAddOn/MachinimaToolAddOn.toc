@@ -1,0 +1,6 @@
+## Interface: 30300
+## Title: MachinimaToolAddOn
+## Notes: AddOn for WoWMachinimaTool 3.3.5
+
+MachinimaToolAddOn.lua
+MachinimaToolAddOn.xml
