@@ -1,4 +1,4 @@
-<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ http://wowprogramming.com/FrameXML/UI.xsd">
+﻿<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ http://wowprogramming.com/FrameXML/UI.xsd">
 
 <Frame name="MachinimaTool" hidden="true" parent="InterfaceOptionsFramePanelContainer">
   <Layers>
@@ -41,22 +41,22 @@
     </Layer>
   </Layers>
   <Frames>
-    <Frame name="$parentAlarmHourDropDown" inherits="UIDropDownMenuTemplate">
+    <Frame name="$parentHourDropDown" inherits="UIDropDownMenuTemplate">
       <Anchors>
         <Anchor point="TOPLEFT" relativeTo="$parentWorldTimeText" relativePoint="BOTTOMLEFT" x="-20" y="-4"/>
       </Anchors>
     </Frame>
-    <Frame name="$parentAlarmMinuteDropDown" inherits="UIDropDownMenuTemplate">
+    <Frame name="$parentMinuteDropDown" inherits="UIDropDownMenuTemplate">
       <Anchors>
-        <Anchor point="LEFT" relativeTo="$parentAlarmHourDropDown" relativePoint="RIGHT" x="-22" y="0"/>
+        <Anchor point="LEFT" relativeTo="$parentHourDropDown" relativePoint="RIGHT" x="-22" y="0"/>
       </Anchors>
     </Frame>
-    <Button name="$parentAlarmResetButton" inherits="UIPanelButtonTemplate" text="Reset">
+    <Button name="$parentResetButton" inherits="UIPanelButtonTemplate" text="Reset">
       <Size>
         <AbsDimension x="128" y="22"/>
       </Size>
       <Anchors>
-        <Anchor point="LEFT" relativeTo="$parentAlarmMinuteDropDown" relativePoint="RIGHT" x="20" y="2"/>
+        <Anchor point="LEFT" relativeTo="$parentMinuteDropDown" relativePoint="RIGHT" x="20" y="2"/>
       </Anchors>
       <Scripts>
         <OnClick>
@@ -87,17 +87,51 @@
           local high = _G[self:GetName().."High"]
           high:SetText("Faster")
           self.type = CONTROLTYPE_SLIDER;
-          self.cvar = "C_CVAR_WORLD_TIME_SPEED";
+          self.cvar = "MT_WorldTimeSpeed";
           self.SetDisplayValue = self.SetValue;
           self.SetValue = function (self, value)
             BlizzardOptionsPanel_SetCVarSafe(self.cvar, value);
-            SetWorldTimeSpeed(value);
+            MachinimaTool_UpdateSettings(self.cvar, value)
           end
           BlizzardOptionsPanel_RegisterControl(self, self:GetParent());
         </OnLoad>
         <OnValueChanged>
           self.newValue = value;
-          SetWorldTimeSpeed(value);
+          MachinimaTool_UpdateSettings(self.cvar, value)
+        </OnValueChanged>
+      </Scripts>
+    </Slider>
+    <Slider name="$parentOverrideDayProgress" inherits="OptionsSliderTemplate">
+      <Anchors>
+        <Anchor point="TOPLEFT" relativeTo="$parentWorldTimeSpeed" relativePoint="TOPRIGHT" x="26" y="0"/>
+      </Anchors>
+      <Layers>
+        <Layer level="ARTWORK">
+          <FontString name="$parentCurrent" parentKey="Current" inherits="GameFontNormalSmall">
+            <Anchors>
+              <Anchor point="TOP" relativePoint="BOTTOM" x="0" y="-2"/>
+            </Anchors>
+          </FontString>
+        </Layer>
+      </Layers>
+      <Scripts>
+        <OnLoad>
+          local low = _G[self:GetName().."Low"]
+          low:SetText("Default")
+          local high = _G[self:GetName().."High"]
+          high:SetText("Faster")
+          self.type = CONTROLTYPE_SLIDER;
+          self.cvar = "MT_OverrideDayProgress";
+          self.SetDisplayValue = self.SetValue;
+          self.SetValue = function (self, value)
+          BlizzardOptionsPanel_SetCVarSafe(self.cvar, value);
+          MachinimaTool_UpdateSettings(self.cvar, value)
+          end
+          BlizzardOptionsPanel_RegisterControl(self, self:GetParent());
+        </OnLoad>
+        <OnValueChanged>
+          self.newValue = value;
+          MachinimaTool_UpdateSettings(self.cvar, value)
         </OnValueChanged>
       </Scripts>
     </Slider>
@@ -117,27 +151,138 @@
       <Scripts>
         <OnLoad>
           local low = _G[self:GetName().."Low"]
-          low:SetText("Default")
+          low:SetText("Darker")
           local high = _G[self:GetName().."High"]
-          high:SetText("Darker")
+          high:SetText("Default")
           self.type = CONTROLTYPE_SLIDER;
-          self.cvar = "C_CVAR_WORLD_NIGHTLIGHT";
+          self.cvar = "MT_NightLight";
           self.SetDisplayValue = self.SetValue;
           self.SetValue = function (self, value)
-            BlizzardOptionsPanel_SetCVarSafe(self.cvar, value);
+          BlizzardOptionsPanel_SetCVarSafe(self.cvar, value);
+          MachinimaTool_UpdateSettings(self.cvar, value)
           end
           BlizzardOptionsPanel_RegisterControl(self, self:GetParent());
         </OnLoad>
         <OnValueChanged>
           self.newValue = value;
+          MachinimaTool_UpdateSettings(self.cvar, value)
         </OnValueChanged>
       </Scripts>
     </Slider>
+    <Slider name="$parentWorldLightLinearAttenuation" inherits="OptionsSliderTemplate">
+      <Anchors>
+        <Anchor point="TOPLEFT" relativeTo="$parentWorldNightLight" relativePoint="BOTTOMLEFT" x="0" y="-36"/>
+      </Anchors>
+      <Layers>
+        <Layer level="ARTWORK">
+          <FontString name="$parentCurrent" parentKey="Current" inherits="GameFontNormalSmall">
+            <Anchors>
+              <Anchor point="TOP" relativePoint="BOTTOM" x="0" y="-2"/>
+            </Anchors>
+          </FontString>
+        </Layer>
+      </Layers>
+      <Scripts>
+        <OnLoad>
+          local low = _G[self:GetName().."Low"]
+          low:SetText("Lower")
+          local high = _G[self:GetName().."High"]
+          high:SetText("Default")
+          self.type = CONTROLTYPE_SLIDER;
+          self.cvar = "MT_LightLinearAttenuation";
+          self.SetDisplayValue = self.SetValue;
+          self.SetValue = function (self, value)
+          BlizzardOptionsPanel_SetCVarSafe(self.cvar, value);
+          MachinimaTool_UpdateSettings(self.cvar, value)
+          end
+          BlizzardOptionsPanel_RegisterControl(self, self:GetParent());
+        </OnLoad>
+        <OnValueChanged>
+          self.newValue = value;
+          MachinimaTool_UpdateSettings(self.cvar, value)
+        </OnValueChanged>
+      </Scripts>
+    </Slider>
+    <Slider name="$parentWorldLightQuadraticAttenuation" inherits="OptionsSliderTemplate">
+      <Anchors>
+        <Anchor point="TOPLEFT" relativeTo="$parentWorldLightLinearAttenuation" relativePoint="TOPRIGHT" x="26" y="0"/>
+      </Anchors>
+      <Layers>
+        <Layer level="ARTWORK">
+          <FontString name="$parentCurrent" parentKey="Current" inherits="GameFontNormalSmall">
+            <Anchors>
+              <Anchor point="TOP" relativePoint="BOTTOM" x="0" y="-2"/>
+            </Anchors>
+          </FontString>
+        </Layer>
+      </Layers>
+      <Scripts>
+        <OnLoad>
+          local low = _G[self:GetName().."Low"]
+          low:SetText("Lower")
+          local high = _G[self:GetName().."High"]
+          high:SetText("Default")
+          self.type = CONTROLTYPE_SLIDER;
+          self.cvar = "MT_LightQuadraticAttenuation";
+          self.SetDisplayValue = self.SetValue;
+          self.SetValue = function (self, value)
+          BlizzardOptionsPanel_SetCVarSafe(self.cvar, value);
+          MachinimaTool_UpdateSettings(self.cvar, value)
+          end
+          BlizzardOptionsPanel_RegisterControl(self, self:GetParent());
+        </OnLoad>
+        <OnValueChanged>
+          self.newValue = value;
+          MachinimaTool_UpdateSettings(self.cvar, value)
+        </OnValueChanged>
+      </Scripts>
+    </Slider>
+    <CheckButton name="$parentWMOCulling" inherits="InterfaceOptionsCheckButtonTemplate">
+      <Anchors>
+        <Anchor point="TOPLEFT" relativeTo="$parentWorldLightLinearAttenuation" relativePoint="BOTTOMLEFT">
+          <Offset x="0" y="-18"/>
+        </Anchor>
+      </Anchors>
+      <Scripts>
+        <OnLoad>
+          self.type = CONTROLTYPE_CHECKBOX;
+          self.cvar = "wmoCulling";
+          BlizzardOptionsPanel_RegisterControl(self, self:GetParent());
+        </OnLoad>
+      </Scripts>
+    </CheckButton>
+    <CheckButton name="$parentTerrainCulling" inherits="InterfaceOptionsCheckButtonTemplate">
+      <Anchors>
+        <Anchor point="TOPLEFT" relativeTo="$parentWMOCulling" relativePoint="BOTTOMLEFT">
+          <Offset x="0" y="-18"/>
+        </Anchor>
+      </Anchors>
+      <Scripts>
+        <OnLoad>
+          self.type = CONTROLTYPE_CHECKBOX;
+          self.cvar = "terrainCulling";
+          BlizzardOptionsPanel_RegisterControl(self, self:GetParent());
+        </OnLoad>
+      </Scripts>
+    </CheckButton>
+    <CheckButton name="$parentAlphaAmbience" inherits="InterfaceOptionsCheckButtonTemplate">
+      <Anchors>
+        <Anchor point="TOPLEFT" relativeTo="$parentTerrainCulling" relativePoint="BOTTOMLEFT">
+          <Offset x="0" y="-18"/>
+        </Anchor>
+      </Anchors>
+      <Scripts>
+        <OnLoad>
+          self.type = CONTROLTYPE_CHECKBOX;
+          self.cvar = "useAlphaAmbienceSound";
+          BlizzardOptionsPanel_RegisterControl(self, self:GetParent());
+        </OnLoad>
+      </Scripts>
+    </CheckButton>
   </Frames>
   <Scripts>
-    <OnLoad>
-      MachinimaTool_OnLoad(self);
-    </OnLoad>
+    <OnLoad function="MachinimaTool_OnLoad"/>
+    <OnEvent function="MachinimaTool_OnEvent"/>
   </Scripts>
 </Frame>
 </Ui>
